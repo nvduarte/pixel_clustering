@@ -1,4 +1,5 @@
 import numpy as np
+
 def clusterize(data_in,
                noise_map,
                cluster_dim=(3,3),
