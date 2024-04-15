@@ -108,12 +108,12 @@ def clusterize(data_in,
                         # optionally, check if there are horizontal neighbours above N_low_sigma * noise. 
                         # If yes sum the highest one, except if it belongs to another horizontal cluster.
                         if allow_2D:
-                            if (cluster[center_y,center_x-1]>cluster[center_y,center_x+1]) & (np.argmax(cluster[center_y-1:center_y+2, center_x-1])==1):
+                            if (cluster[center_y,center_x-1]>cluster[center_y,center_x+1]) and (np.argmax(cluster[center_y-1:center_y+2, center_x-1])==1):
                                     
                                 cluster_sum += cluster[center_y,center_x-1]
                                 neighbours_left = 1
                                 
-                            elif (cluster[center_y,center_x+1]>cluster[center_y,center_x-1]) & (np.argmax(cluster[center_y-1:center_y+2, center_x+1])==1):
+                            elif (cluster[center_y,center_x+1]>cluster[center_y,center_x-1]) and (np.argmax(cluster[center_y-1:center_y+2, center_x+1])==1):
                                 cluster_sum += cluster[center_y,center_x+1]
                                 neighbours_right = 1
                             
