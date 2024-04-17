@@ -44,7 +44,7 @@ def clusterize(data_in,
     # unsqueeze data_in to force shape (trains, cells, pixels_y, pixels_x)
     initial_shape = data_in.shape
     while len(data_in.shape) < 4: 
-        data_in = data_in[:,np.newaxis]
+        data_in = data_in[np.newaxis]
     # unsqueeze noise_map to force shape (cells, pixels_y, pixels_x)
     while len(noise_map.shape) < 3: 
         noise_map = noise_map[np.newaxis]
