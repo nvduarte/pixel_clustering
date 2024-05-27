@@ -178,15 +178,7 @@ def clusterize(data_in,
                             cluster_size[train, mc, phy-neighbours_left_down, phx-neighbours_left_down] = -neighbours # DL
                             cluster_size[train, mc, phy+neighbours_left_up, phx-neighbours_left_up] = -neighbours # UL
                             cluster_size[train, mc, phy, phx] = neighbours
-                            
-                            # Fill clu array
-                            clu[train, mc,
-                                phy-neighbours_down:phy+neighbours_up+1,
-                                phx-neighbours_left:phx+neighbours_right+1] = 0 # set neighbours to zero 
-                            
-                            # Attribute total energy to central pixel
-                            clu[train, mc, phy, phx] = cluster_sum - (integrated_noise/neighbours)*(np.sqrt(neighbours)-1)
-                            
+                          
                             # Zero-out already clusterized pixels
                             data_in[train, mc, phy-neighbours_down:phy, phx] = 0 # vertical down
                             data_in[train, mc, phy:phy+neighbours_up+1, phx] = 0 # vertical up
@@ -196,7 +188,16 @@ def clusterize(data_in,
                             data_in[train, mc, phy-neighbours_right_down, phx+neighbours_right_down] = 0 # D R
                             data_in[train, mc, phy-neighbours_left_down, phx-neighbours_left_down] = 0 # D L
                             data_in[train, mc, phy+neighbours_left_up, phx-neighbours_left_up] = 0 # U L
-                            data_in[train, mc, phy, phx] = 0                                
+                            data_in[train, mc, phy, phx] = 0      
+                            
+                            # Fill clu array
+                            # set neighbours to zero 
+                            clu[train,mc,phy-neighbours_down:phy+neighbours_up+1,phx-neighbours_left:phx+neighbours_right+1]=0 
+                            
+                            # Attribute total energy to central pixel
+                            noise_factor = (integrated_noise/neighbours)*(np.sqrt(neighbours)-1)
+                            clu[train, mc, phy, phx] = cluster_sum - noise_factor
+                          
 
     # restore data_in shape if it was changed 
     if direction.lower()=='horizontal':
@@ -209,5 +210,4 @@ def clusterize(data_in,
     return clu, cluster_size
 
 # TODOs: 
-# [x] set data_in to zero after being added to cluster to prevent being added to more than 1 cluster
 # [ ] Only assumes cluster size of (3, 3) - line 86: cluster = data_in[train, mc][phy-center_y:phy+center_y+1, phx-center_x:phx+center_x+1]
