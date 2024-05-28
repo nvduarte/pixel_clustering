@@ -85,7 +85,6 @@ def clusterize(data_in,
                     
                     cluster = data_in[train, mc][phy-center_y:phy+center_y+1, phx-center_x:phx+center_x+1]
                     cluster_noise = noise_map[mc][phy-center_y:phy+center_y+1, phx-center_x:phx+center_x+1]
-                    integrated_noise = 0
 
                     # 2. Check if index is center of cluster (max of direct horizontal/vertical neighbours)
                     if (cluster*cross_mask).argmax() == center_idx:
@@ -93,7 +92,6 @@ def clusterize(data_in,
                         # 3. Sum pixels in cluster
                         # start with cluster center
                         cluster_sum = cluster[center_y,center_x]
-                        integrated_noise += cluster_noise[center_y,center_x]
                         
                         # look for vertical neighbours above N_low_sigma * noise
                         neighbours_down, neighbours_up, neighbours_left, neighbours_right = 0, 0, 0, 0
@@ -103,7 +101,6 @@ def clusterize(data_in,
                         iy = center_y-1
                         while (iy > -1) and (cluster[iy,center_x] > cluster_noise[iy,center_x]*N_sigma_low):
                             cluster_sum += cluster[iy,center_x]
-                            integrated_noise += cluster_noise[iy,center_x]
                             neighbours_down += 1
                             iy -= 1
                             
@@ -111,7 +108,6 @@ def clusterize(data_in,
                         iy = center_y+1
                         while (iy < cluster_dim[0]) and (cluster[iy,center_x] > cluster_noise[iy,center_x]*N_sigma_low):
                             cluster_sum += cluster[iy,center_x]
-                            integrated_noise += cluster_noise[iy,center_x]
                             neighbours_up += 1
                             iy += 1
 
@@ -123,7 +119,6 @@ def clusterize(data_in,
                                 cluster[center_y,center_x-1]>cluster_noise[center_y,center_x-1]*N_sigma_low and
                                 np.argmax(cluster[center_y-1:center_y+2, center_x-1])==1):
                                 cluster_sum += cluster[center_y,center_x-1]
-                                integrated_noise += cluster_noise[center_y,center_x-1]
                                 neighbours_left = 1
                                 
                                 if allow_diag:
@@ -131,12 +126,10 @@ def clusterize(data_in,
                                         cluster[center_y-1,center_x-1]<cluster[center_y,center_x-1] and # TODO: min of all 2x2 
                                         cluster[center_y-1,center_x-1]>cluster_noise[center_y-1,center_x-1]*N_sigma_low): 
                                         cluster_sum += cluster[center_y-1,center_x-1]
-                                        integrated_noise += cluster_noise[center_y-1,center_x-1]
                                         neighbours_left_down = 1
                                     elif (neighbours_up > neighbours_down and
                                           cluster[center_y+1,center_x-1]<cluster[center_y,center_x-1] and
                                           cluster[center_y+1,center_x-1]>cluster_noise[center_y+1,center_x-1]*N_sigma_low):
-                                        integrated_noise += cluster[center_y+1,center_x-1]
                                         neighbours_left_up = 1
 
                             # right neighbour
@@ -144,7 +137,6 @@ def clusterize(data_in,
                                   cluster[center_y,center_x+1]>cluster_noise[center_y,center_x+1]*N_sigma_low and
                                   np.argmax(cluster[center_y-1:center_y+2, center_x+1])==1):
                                 cluster_sum += cluster[center_y,center_x+1]
-                                integrated_noise += cluster_noise[center_y,center_x+1]
                                 neighbours_right = 1
                                 
                                 if allow_diag:
@@ -152,13 +144,11 @@ def clusterize(data_in,
                                         cluster[center_y-1,center_x+1]<cluster_noise[center_y,center_x+1] and
                                         cluster[center_y-1,center_x+1]>cluster_noise[center_y-1,center_x+1]*N_sigma_low):
                                         cluster_sum += cluster[center_y-1,center_x+1]
-                                        integrated_noise += cluster_noise[center_y-1,center_x+1]
                                         neighbours_right_down = 1
                                     elif (neighbours_up > neighbours_down and
                                           cluster[center_y+1,center_x+1]<cluster[center_y,center_x+1] and
                                           cluster[center_y+1,center_x+1]>cluster_noise[center_y+1,center_x+1]*N_sigma_low):
                                         cluster_sum += cluster[center_y+1,center_x+1]
-                                        integrated_noise += cluster_noise[center_y+1,center_x+1]
                                         neighbours_right_up = 1
                                         
                         # 4. Pass cluster sum to center pixel
@@ -195,8 +185,7 @@ def clusterize(data_in,
                             clu[train,mc,phy-neighbours_down:phy+neighbours_up+1,phx-neighbours_left:phx+neighbours_right+1]=0 
                             
                             # Attribute total energy to central pixel
-                            noise_factor = (integrated_noise/neighbours)*np.sqrt(neighbours) - cluster_noise[center_y,center_x]
-                            clu[train, mc, phy, phx] = cluster_sum - noise_factor
+                            clu[train, mc, phy, phx] = cluster_sum
                           
 
     # restore data_in shape if it was changed 
