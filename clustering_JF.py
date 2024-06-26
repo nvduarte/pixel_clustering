@@ -11,8 +11,7 @@ def clusterize(data_in,
                direction='vertical'):
     
     """
-    Perform clustering algorithm on "strixel" detectors, i.e., detectors with rectangular pixels 
-    where charge sharing is excepted to be much more prevalent in one of the dimensions.
+    Perform clustering algorithm on small squared-pixels detectors.
 
     Args:
         data_in (numpy.ndarray): Input data representing the x-ray charge integrating pixel detector.
