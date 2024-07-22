@@ -42,7 +42,9 @@ def clusterize(data_in,
                                       -3: neighbour pixels of a 3 pixel size cluster
                                       ...
     """
-    
+    # copy the array so that original array is not modified after calling this function
+    data_in = data_in.copy()
+ 
     # unsqueeze data_in to force shape (trains, cells, pixels_y, pixels_x)
     initial_shape = data_in.shape
     while len(data_in.shape) < 4: 
