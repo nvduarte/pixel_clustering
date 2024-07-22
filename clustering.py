@@ -4,7 +4,6 @@ def clusterize(data_in,
                noise_map,
                N_sigma_high=5,
                N_sigma_low=3,
-               E_threshold=0,
                cluster_dim=(3,3)):
     
     """
@@ -17,13 +16,7 @@ def clusterize(data_in,
                             the center of a cluster. Defaults to 5.
         N_sigma_low (int): Multiplier of noise above which pixels are considered to contain 
                            charge from a photon hit. Defaults to 3.
-        allow_2D (bool): Flag to allow 2D clustering. If True, the highest neighbour of the central pixel 
-                         on the non-dominant charge sharing direction may be added to the cluster. Defaults to False.
-        allow_diag (bool): Flag to allow clustering of diagonal pixels. If True, the highest vertical neighbour of the
-                           previously determined horizontal neighbour may be added to the cluster. Defaults to False  
-        E_threshold (float): Energy threshold below which found clusters are discarded. Defaults to 0.
         cluster_dim (tuple): Dimension of the window used to find clusters. Must be a pair of odd numbers. Defaults to (3,3).
-        direction (str): Dominant charge sharing direction, either 'horizontal' or 'vertical'. Defaults to 'vertical'.
 
     Returns:
         clu (numpy.ndarray): Clusterized data where the total charge from a cluster is passed to the central pixel.
