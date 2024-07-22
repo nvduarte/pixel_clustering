@@ -43,7 +43,9 @@ def clusterize(data_in,
                                       -3: neighbour pixels of a 3 pixel size cluster
                                       ...
     """
-    
+    # copy the array so that original array is not modified after calling this function
+    data_in = data_in.copy()
+                 
     # unsqueeze data_in to force shape (trains, cells, pixels_y, pixels_x)
     initial_shape = data_in.shape
     while len(data_in.shape) < 4: 
@@ -86,6 +88,7 @@ def clusterize(data_in,
                     cluster = data_in[train, mc][phy-center_y:phy+center_y+1, phx-center_x:phx+center_x+1]
                     cluster_noise = noise_map[mc][phy-center_y:phy+center_y+1, phx-center_x:phx+center_x+1]
                     integrated_noise = 0
+                    noise_increment_factor = 1
 
                     # 2. Check if index is center of cluster (max of direct horizontal/vertical neighbours)
                     if (cluster*cross_mask).argmax() == center_idx:
@@ -93,7 +96,7 @@ def clusterize(data_in,
                         # 3. Sum pixels in cluster
                         # start with cluster center
                         cluster_sum = cluster[center_y,center_x]
-                        integrated_noise += np.sqrt(cluster_noise[center_y,center_x])
+                        integrated_noise += np.sqrt(cluster_noise[center_y,center_x])*noise_increment_factor
                         
                         # look for vertical neighbours above N_low_sigma * noise
                         neighbours_down, neighbours_up, neighbours_left, neighbours_right = 0, 0, 0, 0
@@ -103,7 +106,7 @@ def clusterize(data_in,
                         iy = center_y-1
                         while (iy > -1) and (cluster[iy,center_x] > cluster_noise[iy,center_x]*N_sigma_low):
                             cluster_sum += cluster[iy,center_x]
-                            integrated_noise += np.sqrt(cluster_noise[iy,center_x])
+                            integrated_noise += np.sqrt(cluster_noise[iy,center_x])*noise_increment_factor
                             neighbours_down += 1
                             iy -= 1
                             
@@ -111,7 +114,7 @@ def clusterize(data_in,
                         iy = center_y+1
                         while (iy < cluster_dim[0]) and (cluster[iy,center_x] > cluster_noise[iy,center_x]*N_sigma_low):
                             cluster_sum += cluster[iy,center_x]
-                            integrated_noise += np.sqrt(cluster_noise[iy,center_x])
+                            integrated_noise += np.sqrt(cluster_noise[iy,center_x])*noise_increment_factor
                             neighbours_up += 1
                             iy += 1
 
@@ -123,7 +126,7 @@ def clusterize(data_in,
                                 cluster[center_y,center_x-1]>cluster_noise[center_y,center_x-1]*N_sigma_low and
                                 np.argmax(cluster[center_y-1:center_y+2, center_x-1])==1):
                                 cluster_sum += cluster[center_y,center_x-1]
-                                integrated_noise += np.sqrt(cluster_noise[center_y,center_x-1])
+                                integrated_noise += np.sqrt(cluster_noise[center_y,center_x-1])*noise_increment_factor
                                 neighbours_left = 1
                                 
                                 if allow_diag:
@@ -131,12 +134,12 @@ def clusterize(data_in,
                                         cluster[center_y-1,center_x-1]<cluster[center_y,center_x-1] and # TODO: min of all 2x2 
                                         cluster[center_y-1,center_x-1]>cluster_noise[center_y-1,center_x-1]*N_sigma_low): 
                                         cluster_sum += cluster[center_y-1,center_x-1]
-                                        integrated_noise += np.sqrt(cluster_noise[center_y-1,center_x-1])
+                                        integrated_noise += np.sqrt(cluster_noise[center_y-1,center_x-1])*noise_increment_factor
                                         neighbours_left_down = 1
                                     elif (neighbours_up > neighbours_down and
                                           cluster[center_y+1,center_x-1]<cluster[center_y,center_x-1] and
                                           cluster[center_y+1,center_x-1]>cluster_noise[center_y+1,center_x-1]*N_sigma_low):
-                                        integrated_noise += np.sqrt(cluster[center_y+1,center_x-1])
+                                        integrated_noise += np.sqrt(cluster[center_y+1,center_x-1])*noise_increment_factor
                                         neighbours_left_up = 1
 
                             # right neighbour
@@ -144,7 +147,7 @@ def clusterize(data_in,
                                   cluster[center_y,center_x+1]>cluster_noise[center_y,center_x+1]*N_sigma_low and
                                   np.argmax(cluster[center_y-1:center_y+2, center_x+1])==1):
                                 cluster_sum += cluster[center_y,center_x+1]
-                                integrated_noise += np.sqrt(cluster_noise[center_y,center_x+1])
+                                integrated_noise += np.sqrt(cluster_noise[center_y,center_x+1])*noise_increment_factor
                                 neighbours_right = 1
                                 
                                 if allow_diag:
@@ -152,13 +155,13 @@ def clusterize(data_in,
                                         cluster[center_y-1,center_x+1]<cluster_noise[center_y,center_x+1] and
                                         cluster[center_y-1,center_x+1]>cluster_noise[center_y-1,center_x+1]*N_sigma_low):
                                         cluster_sum += cluster[center_y-1,center_x+1]
-                                        integrated_noise += np.sqrt(cluster_noise[center_y-1,center_x+1])
+                                        integrated_noise += np.sqrt(cluster_noise[center_y-1,center_x+1])*noise_increment_factor
                                         neighbours_right_down = 1
                                     elif (neighbours_up > neighbours_down and
                                           cluster[center_y+1,center_x+1]<cluster[center_y,center_x+1] and
                                           cluster[center_y+1,center_x+1]>cluster_noise[center_y+1,center_x+1]*N_sigma_low):
                                         cluster_sum += cluster[center_y+1,center_x+1]
-                                        integrated_noise += np.sqrt(cluster_noise[center_y+1,center_x+1])
+                                        integrated_noise += np.sqrt(cluster_noise[center_y+1,center_x+1])*noise_increment_factor
                                         neighbours_right_up = 1
                                         
                         # 4. Pass cluster sum to center pixel
@@ -198,7 +201,6 @@ def clusterize(data_in,
                             noise_factor = (integrated_noise/neighbours)*(np.sqrt(neighbours)-1)
                             clu[train, mc, phy, phx] = cluster_sum - noise_factor
                           
-
     # restore data_in shape if it was changed 
     if direction.lower()=='horizontal':
         clu = clu.swapaxes(-1,-2)
